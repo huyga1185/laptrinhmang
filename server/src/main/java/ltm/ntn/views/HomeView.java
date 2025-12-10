@@ -1,11 +1,6 @@
 package ltm.ntn.views;
 
 import lombok.Getter;
-import ltm.ntn.views.coupons.ManageCouponsView;
-import ltm.ntn.views.dashboard.DashboardView;
-import ltm.ntn.views.invoices.ManageInvoicesView;
-import ltm.ntn.views.products.ManageProductsView;
-import ltm.ntn.views.reports.ReportsView;
 import ltm.ntn.views.utils.SidebarButton;
 
 import javax.swing.*;

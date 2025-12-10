@@ -54,7 +54,7 @@ public class ManageProductsView extends JPanel {
 
         JPanel centerPanel = new JPanel(new BorderLayout());
 
-        JButton btnAddProduct = new JButton("➕ Thêm sản phẩm");
+        JButton btnAddProduct = new JButton("➕Add Product");
         btnAddProduct.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         btnAddProduct.setPreferredSize(new Dimension(200, 40));
         btnAddProduct.setBackground(new Color(60, 120, 200));

@@ -5,10 +5,6 @@ import ltm.ntn.models.services.CouponService;
 import ltm.ntn.models.services.InvoiceService;
 import ltm.ntn.models.services.ProductService;
 import ltm.ntn.views.HomeView;
-import ltm.ntn.views.coupons.ManageCouponsView;
-import ltm.ntn.views.dashboard.DashboardView;
-import ltm.ntn.views.invoices.ManageInvoicesView;
-import ltm.ntn.views.products.ManageProductsView;
 import ltm.ntn.views.reports.ReportsView;
 
 public class HomeController {
@@ -18,6 +14,7 @@ public class HomeController {
     private final ProductController productController;
     private final InvoiceController invoiceController;
     private final CouponController couponController;
+
     private final ProductService productService;
     private final InvoiceService invoiceService;
     private final CouponService couponService;
@@ -32,7 +29,7 @@ public class HomeController {
         this.dashboardController = new DashboardController(productService, invoiceService, couponService);
         this.productController = new ProductController();
         this.couponController = new CouponController();
-        this.invoiceController = new InvoiceController();
+        this.invoiceController = new InvoiceController(); // chỉ expose ManageInvoicesView
 
         initContentPanel();
         initSideBar();
@@ -43,6 +40,8 @@ public class HomeController {
         view.getContentPanel().add(new ReportsView(), "Reports");
         view.getContentPanel().add(couponController.getManageCouponsView(), "ManageCoupons");
         view.getContentPanel().add(productController.getManageProductsView(), "ManageProducts");
+
+        // Chỉ thêm ManageInvoicesView vào HomeView, không thêm invoiceAddView riêng
         view.getContentPanel().add(invoiceController.getManageInvoicesView(), "ManageInvoices");
     }
 
