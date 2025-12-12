@@ -14,4 +14,5 @@ public interface IProductService {
     int countProducts();
     int countActiveProducts();
     int countLowStockProducts();
+    List<Product> findAllActiveProducts();
 }

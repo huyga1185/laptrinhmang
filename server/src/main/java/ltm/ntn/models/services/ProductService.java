@@ -9,6 +9,7 @@ import ltm.ntn.models.services.interfaces.IProductService;
 import ltm.ntn.share.DBConnection;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -55,6 +56,16 @@ public class ProductService implements IProductService {
             log.error("Could not find all products: ", e);
             throw new RuntimeException("Could not find all products.");
         }
+    }
+
+    @Override
+    public List<Product> findAllActiveProducts() {
+        List<Product> products = new ArrayList<>();
+        for (Product product : findAllProducts()) {
+            if (product.isActive())
+                products.add(product);
+        }
+        return products;
     }
 
     @Override

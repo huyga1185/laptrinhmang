@@ -39,7 +39,7 @@ public class ClientHandler implements Runnable {
                 if (response == null)
                     response = "Error: unknown error\n";
 
-                writer.write(response);
+                writer.write(response + "\n");
                 writer.flush();
             }
         } catch (Exception e) {

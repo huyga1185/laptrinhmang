@@ -1,22 +1,28 @@
 package com.ltm.ntn.controllers;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.ltm.ntn.networks.TCPClient;
+import com.ltm.ntn.service.ProductService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import com.ltm.ntn.models.Product;
-import com.ltm.ntn.service.ProductService;
 import com.ltm.ntn.views.ProductListView;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Getter
 public class ProductController {
     private final ProductListView view;
-    private final ProductService service;
+    private final Gson gson;
+    private final ProductService productService;
 
-    public ProductController(ProductService service) {
-        this.service = service;
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+        this.gson = new Gson();
         this.view = new ProductListView();
 
         initListeners();
@@ -29,7 +35,7 @@ public class ProductController {
 
     public void loadProducts() {
         try {
-            List<Product> products = service.getAllActiveProducts();
+            List<Product> products = productService.getAllActiveProducts();
             view.loadProducts(products);
             log.info("Loaded {} products", products.size());
         } catch (Exception e) {

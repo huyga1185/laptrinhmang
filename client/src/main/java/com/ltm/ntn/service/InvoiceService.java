@@ -15,9 +15,9 @@ public class InvoiceService {
     private final TCPClient tcpClient;
     private final Gson gson;
 
-    public InvoiceService(TCPClient tcpClient) {
+    public InvoiceService(TCPClient tcpClient, Gson gson) {
         this.tcpClient = tcpClient;
-        this.gson = new Gson();
+        this.gson = gson;
     }
 
     /**

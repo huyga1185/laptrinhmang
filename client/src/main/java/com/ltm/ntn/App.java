@@ -21,9 +21,7 @@ public class App {
                 MainController controller = new MainController();
 
                 // Add shutdown hook
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    controller.shutdown();
-                }));
+                Runtime.getRuntime().addShutdownHook(new Thread(controller::shutdown));
 
                 controller.show();
 

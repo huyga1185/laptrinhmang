@@ -1,14 +1,17 @@
 package com.ltm.ntn.controllers;
 
+import com.google.gson.*;
+import com.ltm.ntn.service.ProductService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import com.ltm.ntn.networks.TCPClient;
 import com.ltm.ntn.service.ExportService;
 import com.ltm.ntn.service.InvoiceService;
-import com.ltm.ntn.service.ProductService;
 import com.ltm.ntn.views.MainView;
 
 import javax.swing.*;
+import java.lang.reflect.Type;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Getter
@@ -24,12 +27,31 @@ public class MainController {
     private final CreateInvoiceController createInvoiceController;
     private final InvoiceController invoiceController;
 
+    private final Gson gson;
+
     public MainController() {
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+                    @Override
+                    public JsonElement serialize(LocalDateTime src, Type typeOfSrc, com.google.gson.JsonSerializationContext context) {
+                        return new JsonPrimitive(src.toString()); // ISO-8601 string
+                    }
+                })
+                .registerTypeAdapter(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
+                    @Override
+                    public LocalDateTime deserialize(JsonElement json, Type typeOfT, com.google.gson.JsonDeserializationContext context)
+                            throws JsonParseException {
+                        return LocalDateTime.parse(json.getAsString());
+                    }
+                })
+                .create();
+
+
         // Initialize services
         this.tcpClient = new TCPClient();
-        this.productService = new ProductService(tcpClient);
-        this.invoiceService = new InvoiceService(tcpClient);
+        this.invoiceService = new InvoiceService(tcpClient, gson);
         this.exportService = new ExportService();
+        this.productService = new ProductService(tcpClient, gson);
 
         // Initialize controllers
         this.productController = new ProductController(productService);

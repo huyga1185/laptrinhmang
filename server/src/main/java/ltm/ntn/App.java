@@ -1,11 +1,13 @@
 package ltm.ntn;
 
+import lombok.extern.slf4j.Slf4j;
 import ltm.ntn.controllers.HomeController;
 import ltm.ntn.network.TCPServer;
 import ltm.ntn.views.HomeView;
 
 import javax.swing.*;
 
+@Slf4j
 public class App 
 {
     public static void main( String[] args ) {

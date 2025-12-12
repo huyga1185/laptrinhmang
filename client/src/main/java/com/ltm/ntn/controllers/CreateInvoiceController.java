@@ -2,11 +2,11 @@ package com.ltm.ntn.controllers;
 
 import com.ltm.ntn.dto.request.InvoiceCreationRequest;
 import com.ltm.ntn.dto.request.InvoiceItemRequest;
+import com.ltm.ntn.service.ProductService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import com.ltm.ntn.models.*;
 import com.ltm.ntn.service.InvoiceService;
-import com.ltm.ntn.service.ProductService;
 import com.ltm.ntn.views.CreateInvoiceView;
 
 import javax.swing.*;
