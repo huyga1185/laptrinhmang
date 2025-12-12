@@ -88,4 +88,17 @@ public class CouponDAO implements ICouponDAO {
         }
         return coupons;
     }
+    @Override
+    public boolean deleteById(String id) throws Exception {
+        String sql = "DELETE FROM coupons WHERE id = ?";
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, id);
+            int rows = ps.executeUpdate();
+            return rows > 0; // trả true nếu xóa thành công
+        }
+    }
+
 }

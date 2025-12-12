@@ -23,6 +23,16 @@ public class CouponService implements ICouponService {
             throw new RuntimeException("Could not find coupon by id");
         }
     }
+    @Override
+    public boolean deleteCoupon(String id) {
+        try {
+            return couponDAO.deleteById(id);
+        } catch (Exception e) {
+            log.error("Could not delete coupon by id: {}", id, e);
+            throw new RuntimeException("Could not delete coupon by id");
+        }
+    }
+
 
     @Override
     public int totalCouponUsed() {

@@ -1,6 +1,7 @@
 package ltm.ntn.views.products;
 
 import ltm.ntn.models.pojo.Product;
+import ltm.ntn.models.services.ProductService;
 import ltm.ntn.views.utils.ProductItemRenderer;
 
 import javax.swing.*;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ManageProductsView extends JPanel {
+
+    private final ProductService productService; // thêm dòng này
 
     private CardLayout cardLayout;
     private JPanel cardPanel;
@@ -23,6 +26,8 @@ public class ManageProductsView extends JPanel {
     private DefaultListModel<Product> listModel;
 
     public ManageProductsView() {
+
+        productService = new ProductService(); // khởi tạo service
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
@@ -118,7 +123,14 @@ public class ManageProductsView extends JPanel {
         listModel.addElement(p);
     }
 
+
     public void showListPanel() {
         cardLayout.show(cardPanel, "list");
     }
+    // THÊM PHƯƠNG THỨC NÀY
+    public ProductService getProductService() {
+        return productService;
+    }
+
 }
+

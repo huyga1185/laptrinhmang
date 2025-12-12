@@ -47,4 +47,17 @@ public class ProductService implements IProductService {
     public int getTotalSoldProducts() {
         return 0;
     }
+    @Override
+    public boolean deleteProduct(String id) {
+        try {
+            return productDAO.deleteById(id);
+        } catch (Exception e) {
+            log.error("Could not delete product: ", e);
+            throw new RuntimeException("Could not delete product.");
+        }
+    }
+
+
+    public void saveProduct(Product currentProduct) {
+    }
 }

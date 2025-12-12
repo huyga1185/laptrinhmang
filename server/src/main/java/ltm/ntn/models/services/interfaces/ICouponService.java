@@ -5,4 +5,6 @@ import ltm.ntn.models.pojo.Coupon;
 public interface ICouponService {
     Coupon findCouponByID(String id);
     int totalCouponUsed();
+    boolean deleteCoupon(String id);   // thêm
 }
+

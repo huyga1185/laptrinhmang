@@ -18,16 +18,17 @@ public class ProductDetailView extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
 
+        // Header
         JLabel header = new JLabel("Product Detail");
         header.setFont(new Font("Segoe UI", Font.BOLD, 28));
         header.setHorizontalAlignment(SwingConstants.CENTER);
         header.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(header, BorderLayout.NORTH);
 
+        // Form
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(Color.WHITE);
         form.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -38,7 +39,6 @@ public class ProductDetailView extends JPanel {
         txtDescription = styledTextField();
         txtPrice = styledTextField();
         txtQuantity = styledTextField();
-
         chkActive = new JCheckBox("Active");
         chkActive.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         chkActive.setBackground(Color.WHITE);
@@ -53,18 +53,22 @@ public class ProductDetailView extends JPanel {
 
         add(form, BorderLayout.CENTER);
 
+        // Buttons
         JPanel btnPanel = new JPanel();
         btnPanel.setBackground(Color.WHITE);
 
         JButton btnSave = styledButton("💾 Lưu");
         JButton btnBack = styledButton("⬅ Quay lại");
+        JButton btnDelete = styledButton("🗑️ Xóa");
+        btnDelete.setBackground(new Color(220, 60, 60)); // màu đỏ
 
+        btnPanel.add(btnDelete);
         btnPanel.add(btnSave);
         btnPanel.add(btnBack);
         add(btnPanel, BorderLayout.SOUTH);
 
+        // Action listeners
         btnSave.addActionListener(e -> saveProduct());
-
         btnBack.addActionListener(e -> {
             if (isModified()) {
                 int opt = JOptionPane.showConfirmDialog(
@@ -82,8 +86,85 @@ public class ProductDetailView extends JPanel {
                 parent.showListPanel();
             }
         });
+        btnDelete.addActionListener(e -> deleteProduct());
     }
 
+    // Nút Xóa
+    private void deleteProduct() {
+        if (currentProduct == null || currentProduct.getId() == null) {
+            JOptionPane.showMessageDialog(this, "Không có sản phẩm để xóa!");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc muốn xóa sản phẩm này?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                boolean deleted = parent.getProductService().deleteProduct(currentProduct.getId());
+                if (deleted) {
+                    JOptionPane.showMessageDialog(this, "Xóa sản phẩm thành công!");
+                    parent.refreshList();
+                    parent.showListPanel();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không tìm thấy sản phẩm để xóa!");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi xóa sản phẩm: " + ex.getMessage());
+            }
+        }
+    }
+
+    // Nút Lưu
+    private void saveProduct() {
+        if (currentProduct == null) return;
+
+        try {
+            currentProduct.setName(txtName.getText());
+            currentProduct.setDescription(txtDescription.getText());
+            currentProduct.setPrice(Double.parseDouble(txtPrice.getText()));
+            currentProduct.setQuantity(Integer.parseInt(txtQuantity.getText()));
+            currentProduct.setActive(chkActive.isSelected());
+
+            // Lưu vào database thông qua service
+            parent.getProductService().saveProduct(currentProduct);
+
+            JOptionPane.showMessageDialog(this, "Lưu sản phẩm thành công!");
+            parent.refreshList();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Dữ liệu không hợp lệ: " + ex.getMessage());
+        }
+    }
+
+    // Hiển thị thông tin sản phẩm
+    public void setProduct(Product p) {
+        currentProduct = p;
+        lblId.setText(p.getId());
+        lblSku.setText(p.getSku());
+        txtName.setText(p.getName());
+        txtDescription.setText(p.getDescription());
+        txtPrice.setText(String.valueOf(p.getPrice()));
+        txtQuantity.setText(String.valueOf(p.getQuantity()));
+        chkActive.setSelected(p.isActive());
+    }
+
+
+    // Kiểm tra có thay đổi so với dữ liệu gốc
+    private boolean isModified() {
+        if (currentProduct == null) return false;
+        if (!currentProduct.getName().equals(txtName.getText())) return true;
+        if (!currentProduct.getDescription().equals(txtDescription.getText())) return true;
+        if (currentProduct.getPrice() != parseDouble(txtPrice.getText())) return true;
+        if (currentProduct.getQuantity() != parseInt(txtQuantity.getText())) return true;
+        if (currentProduct.isActive() != chkActive.isSelected()) return true;
+        return false;
+    }
+
+    // =================== Helper Methods ===================
     private JLabel styledLabel() {
         JLabel lbl = new JLabel();
         lbl.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -122,42 +203,6 @@ public class ProductDetailView extends JPanel {
         gbc.gridx = 1;
         gbc.weightx = 0.8;
         panel.add(comp, gbc);
-    }
-
-    public void setProduct(Product p) {
-        currentProduct = p;
-
-        lblId.setText(p.getId());
-        lblSku.setText(p.getSku());
-        txtName.setText(p.getName());
-        txtDescription.setText(p.getDescription());
-        txtPrice.setText(String.valueOf(p.getPrice()));
-        txtQuantity.setText(String.valueOf(p.getQuantity()));
-        chkActive.setSelected(p.isActive());
-    }
-
-    private void saveProduct() {
-        try {
-            currentProduct.setName(txtName.getText());
-            currentProduct.setDescription(txtDescription.getText());
-            currentProduct.setPrice(Double.parseDouble(txtPrice.getText()));
-            currentProduct.setQuantity(Integer.parseInt(txtQuantity.getText()));
-            currentProduct.setActive(chkActive.isSelected());
-
-            JOptionPane.showMessageDialog(this, "Lưu thành công!");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Dữ liệu không hợp lệ!");
-        }
-    }
-
-    private boolean isModified() {
-        if (currentProduct == null) return false;
-        if (!currentProduct.getName().equals(txtName.getText())) return true;
-        if (!currentProduct.getDescription().equals(txtDescription.getText())) return true;
-        if (currentProduct.getPrice() != parseDouble(txtPrice.getText())) return true;
-        if (currentProduct.getQuantity() != parseInt(txtQuantity.getText())) return true;
-        if (currentProduct.isActive() != chkActive.isSelected()) return true;
-        return false;
     }
 
     private double parseDouble(String s) {

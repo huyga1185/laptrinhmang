@@ -13,4 +13,6 @@ public interface IProductDAO {
     List<Product> getAllProducts() throws Exception;
     List<Product> getAllActiveProducts() throws Exception;
     List<Product> getAllInactiveProducts() throws Exception;
+    boolean deleteById(String id) throws Exception;
+
 }

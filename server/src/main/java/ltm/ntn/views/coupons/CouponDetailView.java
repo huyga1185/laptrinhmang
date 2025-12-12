@@ -55,12 +55,16 @@ public class CouponDetailView extends JPanel {
 
         JButton btnSave = button("💾 Lưu");
         JButton btnBack = button("⬅ Quay lại");
+        JButton btnDelete = button("🗑 Xóa");
 
         btnPanel.add(btnSave);
+        btnPanel.add(btnDelete);
         btnPanel.add(btnBack);
 
         btnSave.addActionListener(e -> save());
         btnBack.addActionListener(e -> parent.showListPanel());
+        btnDelete.addActionListener(e -> delete());
+
 
         add(btnPanel, BorderLayout.SOUTH);
     }
@@ -115,4 +119,26 @@ public class CouponDetailView extends JPanel {
         parent.refreshList();
         parent.showListPanel();
     }
+    private void delete() {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc muốn xóa coupon này?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                parent.getCouponService().deleteCoupon(coupon.getId());
+                JOptionPane.showMessageDialog(this, "Đã xóa coupon!");
+
+                parent.refreshList();
+                parent.showListPanel();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Xóa thất bại: " + ex.getMessage());
+            }
+        }
+    }
+
 }

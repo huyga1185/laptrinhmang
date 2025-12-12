@@ -131,4 +131,18 @@ public class ProductDAO implements IProductDAO {
     public List<Product> getAllInactiveProducts() throws Exception {
         return getProducts("SELECT * FROM products WHERE is_active = 0");
     }
+    @Override
+    public boolean deleteById(String id) throws Exception {
+        String sql = "DELETE FROM products WHERE id = ?";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, id);
+            int rows = ps.executeUpdate();
+            return rows > 0; // trả true nếu xóa thành công
+        }
+    }
+
 }

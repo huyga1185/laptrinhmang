@@ -56,13 +56,17 @@ public class ProductAddView extends JPanel {
 
         JButton btnAdd = styledButton("➕ Thêm");
         JButton btnBack = styledButton("⬅ Quay lại");
+        JButton btnDelete = styledButton("🗑️ Xóa");
 
+        btnPanel.add(btnDelete); // thêm vào panel
         btnPanel.add(btnAdd);
         btnPanel.add(btnBack);
         add(btnPanel, BorderLayout.SOUTH);
 
         btnAdd.addActionListener(e -> addProduct());
         btnBack.addActionListener(e -> parent.showListPanel());
+        btnDelete.addActionListener(e -> deleteProduct());
+
     }
 
     private JTextField styledTextField() {
@@ -134,4 +138,36 @@ public class ProductAddView extends JPanel {
             JOptionPane.showMessageDialog(this, "Dữ liệu không hợp lệ!");
         }
     }
+    private void deleteProduct() {
+        // Lấy ID sản phẩm
+        String id = txtId.getText().trim();
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không có sản phẩm để xóa!");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc muốn xóa sản phẩm này?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                boolean deleted = parent.getProductService().deleteProduct(id);
+                if (deleted) {
+                    JOptionPane.showMessageDialog(this, "Xóa sản phẩm thành công!");
+                    parent.refreshList();
+                    resetForm();
+                    parent.showListPanel();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không tìm thấy sản phẩm để xóa!");
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi xóa sản phẩm: " + ex.getMessage());
+            }
+        }
+    }
+
 }

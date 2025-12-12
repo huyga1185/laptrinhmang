@@ -8,6 +8,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import ltm.ntn.models.services.CouponService;
+import ltm.ntn.models.services.interfaces.ICouponService;
+
 
 public class ManageCouponsView extends JPanel {
 
@@ -20,6 +23,7 @@ public class ManageCouponsView extends JPanel {
 
     private JList<Coupon> couponList;
     private DefaultListModel<Coupon> listModel;
+    private ICouponService couponService = new CouponService();
 
     public ManageCouponsView() {
 
@@ -120,6 +124,10 @@ public class ManageCouponsView extends JPanel {
     public void refreshList() {
         listPanel.revalidate();
         listPanel.repaint();
+    }
+
+    public ICouponService getCouponService() {
+        return couponService;
     }
 
     public void showListPanel() {
