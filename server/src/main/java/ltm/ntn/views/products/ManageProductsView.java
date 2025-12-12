@@ -1,50 +1,42 @@
 package ltm.ntn.views.products;
 
+import lombok.Getter;
+import lombok.Setter;
 import ltm.ntn.models.pojo.Product;
-import ltm.ntn.models.services.ProductService;
 import ltm.ntn.views.utils.ProductItemRenderer;
 
 import javax.swing.*;
 import java.awt.*;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
+@Getter
 public class ManageProductsView extends JPanel {
-
-    private final ProductService productService; // thêm dòng này
+    @Setter
+    private Consumer<Product> onItemSelected;
 
     private CardLayout cardLayout;
     private JPanel cardPanel;
 
     private JPanel listPanel;
-    private ProductDetailView productDetailView;
-    private ProductAddView productAddView;
 
     private JList<Product> productList;
     private DefaultListModel<Product> listModel;
 
-    public ManageProductsView() {
+    private JButton btnAddProduct; // để controller bắt sự kiện
 
-        productService = new ProductService(); // khởi tạo service
+    public ManageProductsView() {
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
         createListPanel();
 
-        productDetailView = new ProductDetailView(this);
-        productAddView = new ProductAddView(this);
-
-        cardPanel.add(listPanel, "list");
-        cardPanel.add(productDetailView, "detail");
-        cardPanel.add(productAddView, "add");
-
         setLayout(new BorderLayout());
         add(cardPanel, BorderLayout.CENTER);
-
-        cardLayout.show(cardPanel, "list");
     }
 
     private void createListPanel() {
@@ -54,18 +46,13 @@ public class ManageProductsView extends JPanel {
         JLabel header = new JLabel("Manage Product");
         header.setFont(new Font("Segoe UI", Font.BOLD, 28));
         header.setHorizontalAlignment(SwingConstants.CENTER);
-        header.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         listPanel.add(header, BorderLayout.NORTH);
 
         JPanel centerPanel = new JPanel(new BorderLayout());
 
-        JButton btnAddProduct = new JButton("➕Add Product");
+        btnAddProduct = new JButton("➕ Add Product");
         btnAddProduct.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         btnAddProduct.setPreferredSize(new Dimension(200, 40));
-        btnAddProduct.setBackground(new Color(60, 120, 200));
-        btnAddProduct.setForeground(Color.WHITE);
-        btnAddProduct.setFocusPainted(false);
-        btnAddProduct.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         JPanel topBtnPanel = new JPanel();
         topBtnPanel.add(btnAddProduct);
@@ -74,63 +61,56 @@ public class ManageProductsView extends JPanel {
 
         listModel = new DefaultListModel<>();
         productList = new JList<>(listModel);
-        productList.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         productList.setCellRenderer(new ProductItemRenderer());
         productList.setFixedCellHeight(80);
 
-        JScrollPane scrollPane = new JScrollPane(productList);
-        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        centerPanel.add(new JScrollPane(productList), BorderLayout.CENTER);
 
         listPanel.add(centerPanel, BorderLayout.CENTER);
-
-        loadDemoProducts();
-
-        btnAddProduct.addActionListener(e -> {
-            productAddView.resetForm();
-            cardLayout.show(cardPanel, "add");
-        });
-
         productList.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    Product p = productList.getSelectedValue();
-                    if (p != null) {
-                        productDetailView.setProduct(p);
-                        cardLayout.show(cardPanel, "detail");
+                    if (onItemSelected != null) {
+                        Product selected = productList.getSelectedValue();
+                        onItemSelected.accept(selected);
                     }
                 }
             }
         });
+
     }
 
-    private void loadDemoProducts() {
+    public void addProducts(List<Product> products) {
         listModel.clear();
-        List<Product> demo = new ArrayList<>();
-        demo.add(new Product("1", "Laptop", "SKU001", "Laptop gaming", 1200.0, 10, 0, true));
-        demo.add(new Product("2", "Mouse", "SKU002", "Wireless mouse", 25.5, 50, 0, true));
-        demo.add(new Product("3", "Keyboard", "SKU003", "Mechanical keyboard", 80.0, 30, 0, false));
-
-        demo.forEach(listModel::addElement);
+        for (Product p : products) {
+            listModel.addElement(p);
+        }
     }
 
-    public void refreshList() {
-        listPanel.repaint();
-        listPanel.revalidate();
+    public void addProduct(Product product) {
+        if (product != null) {
+            listModel.addElement(product);
+        }
     }
 
-    public void addProduct(Product p) {
-        listModel.addElement(p);
+    public void removeProduct(String productId) {
+        for (int i = 0; i < listModel.size(); i++) {
+            Product p = listModel.get(i);
+            if (p.getId().equals(productId)) {
+                listModel.remove(i);
+                return;
+            }
+        }
     }
 
-
-    public void showListPanel() {
-        cardLayout.show(cardPanel, "list");
+    public void updateProduct(Product updatedProduct) {
+        for (int i = 0; i < listModel.size(); i++) {
+            Product p = listModel.get(i);
+            if (p.getId().equals(updatedProduct.getId())) {
+                listModel.set(i, updatedProduct);
+                return;
+            }
+        }
     }
-    // THÊM PHƯƠNG THỨC NÀY
-    public ProductService getProductService() {
-        return productService;
-    }
-
 }
-

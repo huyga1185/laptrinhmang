@@ -12,4 +12,5 @@ public interface IInvoiceItemDAO {
     List<InvoiceItem> getAllInvoiceItemsByProductId(String productId) throws Exception;
     List<InvoiceItem> getAllInvoiceItems() throws Exception;
     InvoiceItem getInvoiceItemById(String id) throws Exception;
+    boolean isProductUsed(String productId) throws Exception;
 }

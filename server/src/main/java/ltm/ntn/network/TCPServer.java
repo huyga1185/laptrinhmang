@@ -12,7 +12,7 @@ public class TCPServer {
     private final int PORT;
 
     public TCPServer() {
-        try (InputStream input = TCPServer.class .getClassLoader() .getResourceAsStream("applications.properties")) {
+        try (InputStream input = TCPServer.class .getClassLoader() .getResourceAsStream("application.properties")) {
             Properties prop = new Properties();
             prop.load(input);
 

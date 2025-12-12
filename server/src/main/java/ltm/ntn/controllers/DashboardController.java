@@ -5,7 +5,7 @@ import ltm.ntn.models.services.CouponService;
 import ltm.ntn.models.services.InvoiceService;
 import ltm.ntn.models.services.ProductService;
 import ltm.ntn.views.dashboard.DashboardView;
-import ltm.ntn.views.utils.BlockPanel;
+import ltm.ntn.views.utils.ProductBlockPanel;
 
 import java.awt.*;
 
@@ -26,6 +26,7 @@ public class DashboardController {
         this.invoiceService = invoiceService;
         this.couponService = couponService;
         initBlocks();
+        initProductDetail();
     }
 
     private void initBlocks() {
@@ -33,5 +34,23 @@ public class DashboardController {
         dashboardView.getBlock2().setMainNumber(String.valueOf(invoiceService.getTotalInvoices()));
         dashboardView.getBlock3().setMainNumber(String.valueOf(couponService.totalCouponUsed()));
         dashboardView.getBlock4().setMainNumber(String.valueOf(invoiceService.getRevenue()));
+    }
+
+    private void initProductDetail() {
+        ProductBlockPanel pbl = dashboardView.getProductBlock();
+        pbl.setActiveItems(productService.countActiveProducts());
+        pbl.setAllItems(productService.countProducts());
+        pbl.setLowStockItems(productService.countLowStockProducts());
+    }
+
+    public void refresh() {
+        dashboardView.getBlock1().setMainNumber(String.valueOf(productService.getTotalSoldProducts()));
+        dashboardView.getBlock2().setMainNumber(String.valueOf(invoiceService.getTotalInvoices()));
+        dashboardView.getBlock3().setMainNumber(String.valueOf(couponService.totalCouponUsed()));
+        dashboardView.getBlock4().setMainNumber(String.valueOf(invoiceService.getRevenue()));
+        ProductBlockPanel pbl = dashboardView.getProductBlock();
+        pbl.setActiveItems(productService.countActiveProducts());
+        pbl.setAllItems(productService.countProducts());
+        pbl.setLowStockItems(productService.countLowStockProducts());
     }
 }

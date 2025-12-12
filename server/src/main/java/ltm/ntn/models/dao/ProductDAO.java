@@ -19,7 +19,7 @@ public class ProductDAO implements IProductDAO {
         if (product.getId() == null)
             sql = "INSERT INTO products (id, sku, name, description, price, quantity, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)";
         else
-            sql = "UPDATE products SET name = ?, description = ?, price = ?, quantity = ?, is_active = ?, sold = ? WHERE id = ?";
+            sql = "UPDATE products SET name = ?, description = ?, price = ?, quantity = ?, is_active = ? WHERE id = ?";
 
         try (
             PreparedStatement preparedStatement = connection.prepareStatement(sql)
@@ -40,8 +40,7 @@ public class ProductDAO implements IProductDAO {
                 preparedStatement.setDouble(3, product.getPrice());
                 preparedStatement.setInt(4, product.getQuantity());
                 preparedStatement.setBoolean(5, product.isActive());
-                preparedStatement.setInt(6, product.getSold());
-                preparedStatement.setString(7, product.getId());
+                preparedStatement.setString(6, product.getId());
             }
 
             preparedStatement.executeUpdate();
@@ -131,18 +130,20 @@ public class ProductDAO implements IProductDAO {
     public List<Product> getAllInactiveProducts() throws Exception {
         return getProducts("SELECT * FROM products WHERE is_active = 0");
     }
+
     @Override
-    public boolean deleteById(String id) throws Exception {
-        String sql = "DELETE FROM products WHERE id = ?";
+    public void inactivateProductById(String id) throws Exception {
+        String sql = "UPDATE products SET is_active = 0 WHERE id = ?";
 
         try (
-                Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
+                Connection connection = DBConnection.getConnection();
+                PreparedStatement ps = connection.prepareStatement(sql)
         ) {
             ps.setString(1, id);
             int rows = ps.executeUpdate();
-            return rows > 0; // trả true nếu xóa thành công
+
+            if (rows == 0)
+                throw new SQLException("Could not inactivate product with id = " + id);
         }
     }
-
 }

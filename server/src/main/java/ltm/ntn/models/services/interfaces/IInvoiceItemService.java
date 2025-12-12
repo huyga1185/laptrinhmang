@@ -10,4 +10,5 @@ public interface IInvoiceItemService {
     List<InvoiceItem> findInvoiceItemsByInvoiceId(String id);
     List<InvoiceItem> findInvoiceItemsByProductId(String productId);
     InvoiceItem findInvoiceItemById(String id);
+    boolean isProductUsed(String productId);
 }

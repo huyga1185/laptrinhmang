@@ -4,11 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.ltm.ntn.models.Invoice;
 import lombok.extern.slf4j.Slf4j;
-import com.ltm.ntn.models.InvoiceCreationRequest;
+import com.ltm.ntn.dto.request.InvoiceCreationRequest;
 import com.ltm.ntn.networks.TCPClient;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j

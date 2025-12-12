@@ -13,6 +13,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 public class ProductSelection {
-    public int productId;
+    public String productId;
     public int quantity;
 }

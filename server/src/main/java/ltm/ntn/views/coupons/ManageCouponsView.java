@@ -1,54 +1,50 @@
 package ltm.ntn.views.coupons;
 
 import ltm.ntn.models.pojo.Coupon;
-import ltm.ntn.share.enums.DiscountType;
 import ltm.ntn.views.utils.CouponItemRenderer;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import ltm.ntn.models.services.CouponService;
-import ltm.ntn.models.services.interfaces.ICouponService;
+import java.util.List;
+import java.util.function.Consumer;
 
-
+@Getter
 public class ManageCouponsView extends JPanel {
+
+    @Setter
+    private Consumer<Coupon> onItemSelected;   // 🔥 callback giống product
 
     private CardLayout cardLayout;
     private JPanel cardPanel;
 
     private JPanel listPanel;
-    private CouponDetailView couponDetailView;
-    private CouponAddView couponAddView;
-
     private JList<Coupon> couponList;
     private DefaultListModel<Coupon> listModel;
-    private ICouponService couponService = new CouponService();
+
+    private JButton btnAdd;
 
     public ManageCouponsView() {
+
+        setLayout(new BorderLayout());
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
         createListPanel();
-
-        couponDetailView = new CouponDetailView(this);
-        couponAddView = new CouponAddView(this);
-
         cardPanel.add(listPanel, "list");
-        cardPanel.add(couponDetailView, "detail");
-        cardPanel.add(couponAddView, "add");
 
-        setLayout(new BorderLayout());
         add(cardPanel, BorderLayout.CENTER);
-
         cardLayout.show(cardPanel, "list");
     }
 
     private void createListPanel() {
-
         listPanel = new JPanel(new BorderLayout());
 
+        // HEADER
         JLabel header = new JLabel("Manage Coupons");
         header.setFont(new Font("Segoe UI", Font.BOLD, 28));
         header.setHorizontalAlignment(SwingConstants.CENTER);
@@ -57,80 +53,73 @@ public class ManageCouponsView extends JPanel {
 
         JPanel centerPanel = new JPanel(new BorderLayout());
 
-        JButton btnAdd = new JButton("➕ Thêm coupon");
+        // BUTTON ADD
+        btnAdd = new JButton("➕ Thêm coupon");
         btnAdd.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         btnAdd.setPreferredSize(new Dimension(200, 40));
-        btnAdd.setBackground(new Color(60, 120, 200));
-        btnAdd.setForeground(Color.WHITE);
 
         JPanel btnPanel = new JPanel();
         btnPanel.add(btnAdd);
-
         centerPanel.add(btnPanel, BorderLayout.NORTH);
 
+        // LIST + RENDERER
         listModel = new DefaultListModel<>();
         couponList = new JList<>(listModel);
 
         couponList.setCellRenderer(new CouponItemRenderer());
-        couponList.setFixedCellHeight(80);
+        couponList.setFixedCellHeight(70);
 
+        // SCROLL
         JScrollPane scrollPane = new JScrollPane(couponList);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
         listPanel.add(centerPanel, BorderLayout.CENTER);
 
-        loadDemoCoupons();
-
-        btnAdd.addActionListener(e -> {
-            couponAddView.resetForm();
-            cardLayout.show(cardPanel, "add");
-        });
-
+        // 🔥 DOUBLE CLICK SELECT ITEM
         couponList.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    Coupon c = couponList.getSelectedValue();
-                    if (c != null) {
-                        couponDetailView.setCoupon(c);
-                        cardLayout.show(cardPanel, "detail");
+                    Coupon selected = couponList.getSelectedValue();
+                    if (selected != null && onItemSelected != null) {
+                        onItemSelected.accept(selected);
                     }
                 }
             }
         });
     }
 
-    private void loadDemoCoupons() {
+    // =============== HELPERS ==================
+    public void setCoupons(List<Coupon> coupons) {
         listModel.clear();
-
-        listModel.addElement(new Coupon(
-                "1","SALE10", DiscountType.PERCENTAGE,
-                10, java.time.LocalDate.now(),
-                java.time.LocalDate.now().plusDays(30),
-                100, 10, 0
-        ));
-
-        listModel.addElement(new Coupon(
-                "2","FREESHIP", DiscountType.FIXED_AMOUNT,
-                30, java.time.LocalDate.now(),
-                java.time.LocalDate.now().plusDays(7),
-                0, 5, 0
-        ));
+        for (Coupon c : coupons) listModel.addElement(c);
     }
 
-    public void addCoupon(Coupon c) {
+    public void addCouponToList(Coupon c) {
         listModel.addElement(c);
     }
 
-    public void refreshList() {
-        listPanel.revalidate();
-        listPanel.repaint();
+    public void updateCouponInList(Coupon updated) {
+        for (int i = 0; i < listModel.size(); i++) {
+            Coupon c = listModel.get(i);
+
+            // So sánh theo ID hoặc SKU – tuỳ bạn dùng trường nào
+            if (c.getId().equals(updated.getId())) {
+                listModel.set(i, updated);    // refresh UI
+                return;
+            }
+        }
     }
 
-    public ICouponService getCouponService() {
-        return couponService;
+    public void removeCoupon(String couponId) {
+        for (int i = 0; i < listModel.size(); i++) {
+            Coupon c = listModel.get(i);
+            if (c.getId().equals(couponId)) {
+                listModel.remove(i);
+                return;
+            }
+        }
     }
 
-    public void showListPanel() {
-        cardLayout.show(cardPanel, "list");
-    }
 }

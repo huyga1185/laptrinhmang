@@ -10,5 +10,6 @@ public interface ICouponDAO {
     Coupon getCouponById(String id) throws Exception;
     List<Coupon> getAllCoupons() throws Exception;
     boolean deleteById(String id) throws Exception;
-
+    Coupon getCouponByCouponCode(String code) throws Exception;
+    Coupon increaseRedemptions(Connection connection, Coupon coupon) throws Exception;
 }

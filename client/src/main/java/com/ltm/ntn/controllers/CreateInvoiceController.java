@@ -1,5 +1,7 @@
 package com.ltm.ntn.controllers;
 
+import com.ltm.ntn.dto.request.InvoiceCreationRequest;
+import com.ltm.ntn.dto.request.InvoiceItemRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import com.ltm.ntn.models.*;

@@ -14,22 +14,22 @@ public class HomeController {
     private final ProductController productController;
     private final InvoiceController invoiceController;
     private final CouponController couponController;
-
-    private final ProductService productService;
-    private final InvoiceService invoiceService;
-    private final CouponService couponService;
+    private final ReportController reportController;
 
     public HomeController(HomeView view){
         this.view = view;
 
-        this.productService = new ProductService();
-        this.invoiceService = new InvoiceService();
-        this.couponService = new CouponService();
+        ProductService productService = new ProductService();
+        InvoiceService invoiceService = new InvoiceService();
+        CouponService couponService = new CouponService();
 
         this.dashboardController = new DashboardController(productService, invoiceService, couponService);
-        this.productController = new ProductController();
-        this.couponController = new CouponController();
-        this.invoiceController = new InvoiceController(); // chỉ expose ManageInvoicesView
+        this.productController = new ProductController(productService, dashboardController);
+        this.couponController = new CouponController(couponService);
+        this.invoiceController = new InvoiceController(invoiceService, productService, couponService, dashboardController, productController, couponController); // chỉ expose ManageInvoicesView
+        this.reportController = new ReportController(invoiceService);
+
+        this.productController.setInvoiceController(invoiceController);
 
         initContentPanel();
         initSideBar();
@@ -37,11 +37,9 @@ public class HomeController {
 
     private void initContentPanel() {
         view.getContentPanel().add(dashboardController.getDashboardView(), "Dashboard");
-        view.getContentPanel().add(new ReportsView(), "Reports");
+        view.getContentPanel().add(reportController.getReportsView(), "Reports");
         view.getContentPanel().add(couponController.getManageCouponsView(), "ManageCoupons");
         view.getContentPanel().add(productController.getManageProductsView(), "ManageProducts");
-
-        // Chỉ thêm ManageInvoicesView vào HomeView, không thêm invoiceAddView riêng
         view.getContentPanel().add(invoiceController.getManageInvoicesView(), "ManageInvoices");
     }
 
@@ -50,5 +48,6 @@ public class HomeController {
         view.getManageProductsButton().addActionListener(e -> view.showCard("ManageProducts"));
         view.getManageCouponsButton().addActionListener(e -> view.showCard("ManageCoupons"));
         view.getManageInvoicesButton().addActionListener(e -> view.showCard("ManageInvoices"));
+        view.getReportsButton().addActionListener(e -> view.showCard("Reports"));
     }
 }

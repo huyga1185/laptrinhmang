@@ -18,4 +18,5 @@ public interface IInvoiceService {
     List<GetInvoiceResponse> findAllInvoiceForClients();
     int getTotalInvoices();
     double getRevenue();
+    List<GetInvoiceResponse> findAllInvoicesSafe();
 }

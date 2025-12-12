@@ -1,4 +1,4 @@
-package com.ltm.ntn.models;
+package com.ltm.ntn.dto.request;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;

@@ -1,21 +1,30 @@
 package ltm.ntn.views.coupons;
 
 import ltm.ntn.models.pojo.Coupon;
+import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
 
+@Getter
 public class CouponDetailView extends JPanel {
 
     private JTextField txtExpiryDate;
     private JTextField txtMaxRedemptions;
 
-    private JLabel lblCode, lblType, lblAmount, lblIssued;
-    private ManageCouponsView parent;
+    private JLabel lblCode;
+    private JLabel lblType;
+    private JLabel lblAmount;
+    private JLabel lblIssued;
+    private JLabel lblRedemptions;   // 🔥 THÊM FIELD MỚI
+
+    private JButton btnSave;
+    private JButton btnBack;
+    private JButton btnDelete;
+
     private Coupon coupon;
 
-    public CouponDetailView(ManageCouponsView parent) {
-        this.parent = parent;
+    public CouponDetailView() {
 
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
@@ -37,34 +46,34 @@ public class CouponDetailView extends JPanel {
         lblType = label();
         lblAmount = label();
         lblIssued = label();
+        lblRedemptions = label();     // 🔥 label readonly
 
         txtExpiryDate = textField();
         txtMaxRedemptions = textField();
 
-        addField(form, gbc, 0, "Coupon Code:", lblCode);
-        addField(form, gbc, 1, "Discount Type:", lblType);
-        addField(form, gbc, 2, "Amount:", lblAmount);
-        addField(form, gbc, 3, "Issued Date:", lblIssued);
-        addField(form, gbc, 4, "Expiry Date:", txtExpiryDate);
-        addField(form, gbc, 5, "Max Redemptions:", txtMaxRedemptions);
+        int row = 0;
+        addField(form, gbc, row++, "Coupon Code:", lblCode);
+        addField(form, gbc, row++, "Discount Type:", lblType);
+        addField(form, gbc, row++, "Amount:", lblAmount);
+        addField(form, gbc, row++, "Issued Date:", lblIssued);
+        addField(form, gbc, row++, "Expiry Date:", txtExpiryDate);
+        addField(form, gbc, row++, "Max Redemptions:", txtMaxRedemptions);
+
+        // 🔥 THÊM FIELD "Redemptions"
+        addField(form, gbc, row++, "Redemptions:", lblRedemptions);
 
         add(form, BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel();
         btnPanel.setBackground(Color.WHITE);
 
-        JButton btnSave = button("💾 Lưu");
-        JButton btnBack = button("⬅ Quay lại");
-        JButton btnDelete = button("🗑 Xóa");
+        btnSave = button("💾 Lưu");
+        btnDelete = button("🗑 Xóa");
+        btnBack = button("⬅ Quay lại");
 
         btnPanel.add(btnSave);
         btnPanel.add(btnDelete);
         btnPanel.add(btnBack);
-
-        btnSave.addActionListener(e -> save());
-        btnBack.addActionListener(e -> parent.showListPanel());
-        btnDelete.addActionListener(e -> delete());
-
 
         add(btnPanel, BorderLayout.SOUTH);
     }
@@ -93,12 +102,15 @@ public class CouponDetailView extends JPanel {
         gbc.gridy = row;
 
         gbc.gridx = 0;
-        panel.add(new JLabel(label), gbc);
+        JLabel l = new JLabel(label);
+        l.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        panel.add(l, gbc);
 
         gbc.gridx = 1;
         panel.add(comp, gbc);
     }
 
+    /** View hiển thị dữ liệu */
     public void setCoupon(Coupon c) {
         this.coupon = c;
 
@@ -109,36 +121,20 @@ public class CouponDetailView extends JPanel {
 
         txtExpiryDate.setText(c.getExpiryDate().toString());
         txtMaxRedemptions.setText(String.valueOf(c.getMaxRedemptions()));
+
+        // 🔥 FIELD MỚI
+        lblRedemptions.setText(String.valueOf(c.getRedemptions()));
     }
 
-    private void save() {
-        coupon.setExpiryDate(java.time.LocalDate.parse(txtExpiryDate.getText()));
-        coupon.setMaxRedemptions(Integer.parseInt(txtMaxRedemptions.getText()));
+    public void resetForm() {
+        lblCode.setText("");
+        lblType.setText("");
+        lblAmount.setText("");
+        lblIssued.setText("");
+        lblRedemptions.setText("");
 
-        JOptionPane.showMessageDialog(this, "Cập nhật coupon thành công!");
-        parent.refreshList();
-        parent.showListPanel();
-    }
-    private void delete() {
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Bạn có chắc muốn xóa coupon này?",
-                "Xác nhận xóa",
-                JOptionPane.YES_NO_OPTION
-        );
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                parent.getCouponService().deleteCoupon(coupon.getId());
-                JOptionPane.showMessageDialog(this, "Đã xóa coupon!");
-
-                parent.refreshList();
-                parent.showListPanel();
-
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Xóa thất bại: " + ex.getMessage());
-            }
-        }
+        txtExpiryDate.setText("");
+        txtMaxRedemptions.setText("");
     }
 
 }

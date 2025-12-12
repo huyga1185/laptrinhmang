@@ -65,4 +65,14 @@ public class InvoiceItemService implements IInvoiceItemService {
             throw new RuntimeException("Could not find invoice item by id.");
         }
     }
+
+    @Override
+    public boolean isProductUsed(String productId) {
+        try {
+            return invoiceItemDAO.isProductUsed(productId);
+        } catch (Exception e) {
+            log.error("Could not find invoice items by product id: ", e);
+            throw new RuntimeException("Could not find invoice items by product id");
+        }
+    }
 }

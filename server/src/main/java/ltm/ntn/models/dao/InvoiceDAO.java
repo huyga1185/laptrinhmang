@@ -15,33 +15,33 @@ import java.util.List;
 public class InvoiceDAO implements IInvoiceDAO {
     @Override
     public Invoice save(Connection connection, Invoice invoice) throws Exception {
+        boolean isInsert = invoice.getId() == null;
+
         String sql;
-        if (invoice.getId() == null)
+        if (isInsert) {
             sql = "INSERT INTO invoices (id, coupon_id, invoice_code, total_amount) VALUES (?, ?, ?, ?)";
-        else
+            invoice.setId(Utils.createUUID()); // tạo ID mới
+        } else {
             sql = "UPDATE invoices SET total_amount = ? WHERE id = ?";
+        }
 
-        if (connection == null)
-            throw new Exception("Connection is null");
-
-        try(
-            PreparedStatement preparedStatement = connection.prepareStatement(sql)
-        ) {
-            if (invoice.getId() == null) {
-                invoice.setId(Utils.createUUID());
-                preparedStatement.setString(1, invoice.getId());
-                preparedStatement.setString(2, invoice.getCouponId());
-                preparedStatement.setString(3, invoice.getInvoiceCode());
-                preparedStatement.setDouble(4, invoice.getTotalAmount());
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            if (isInsert) {
+                ps.setString(1, invoice.getId());
+                ps.setString(2, invoice.getCouponId());
+                ps.setString(3, invoice.getInvoiceCode());
+                ps.setDouble(4, invoice.getTotalAmount());
             } else {
-                preparedStatement.setDouble(1, invoice.getTotalAmount());
-                preparedStatement.setString(2, invoice.getId());
+                ps.setDouble(1, invoice.getTotalAmount());
+                ps.setString(2, invoice.getId());
             }
 
-            preparedStatement.executeUpdate();
+            ps.executeUpdate();
         }
-        return invoice;
+
+        return invoice; // luôn trả về ID đã set
     }
+
 
     public static Invoice mapResultSetToInvoice(ResultSet rs) throws SQLException {
         Invoice invoice = new Invoice();

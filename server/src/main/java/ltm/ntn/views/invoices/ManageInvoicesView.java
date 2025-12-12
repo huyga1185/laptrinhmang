@@ -10,13 +10,10 @@ import java.awt.*;
 @Getter
 public class ManageInvoicesView extends JPanel {
 
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
+    private final CardLayout cardLayout;
+    private final JPanel cardPanel;
 
     private JPanel listPanel;
-
-    private InvoiceAddView invoiceAddView;
-    private InvoiceDetailView invoiceDetailView;
 
     private JList<GetInvoiceResponse> invoiceList;
     private DefaultListModel<GetInvoiceResponse> invoiceListModel;
@@ -25,20 +22,12 @@ public class ManageInvoicesView extends JPanel {
     private JButton btnAddInvoice; // nút Add Invoice expose ra ngoài
 
     // Constructor nhận các view từ controller
-    public ManageInvoicesView(InvoiceAddView addView, InvoiceDetailView detailView) {
-        this.invoiceAddView = addView;
-        this.invoiceDetailView = detailView;
-
+    public ManageInvoicesView() {
         setLayout(new BorderLayout());
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
         createListPanel();
-
-        // Add các panel vào CardLayout
-        cardPanel.add(listPanel, "list");
-        cardPanel.add(invoiceAddView, "add");
-        cardPanel.add(invoiceDetailView, "detail");
 
         add(cardPanel, BorderLayout.CENTER);
 
@@ -96,32 +85,7 @@ public class ManageInvoicesView extends JPanel {
         centerPanel.add(listWrapper, BorderLayout.CENTER);
     }
 
-    // =====================================================================
-    //  PUBLIC FUNCTION SUPPORT CONTROLLER
-    // =====================================================================
-
-    public void clearInvoices() {
-        invoiceListModel.clear();
-    }
-
     public void addInvoice(GetInvoiceResponse invoice) {
         invoiceListModel.addElement(invoice);
-    }
-
-    public GetInvoiceResponse getSelectedInvoice() {
-        return invoiceList.getSelectedValue();
-    }
-
-    // Panel switching (controller sẽ gọi)
-    public void showListPanel() {
-        cardLayout.show(cardPanel, "list");
-    }
-
-    public void showAddPanel() {
-        cardLayout.show(cardPanel, "add");
-    }
-
-    public void showDetailPanel() {
-        cardLayout.show(cardPanel, "detail");
     }
 }

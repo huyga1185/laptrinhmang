@@ -101,4 +101,33 @@ public class CouponDAO implements ICouponDAO {
         }
     }
 
+    @Override
+    public Coupon getCouponByCouponCode(String code) throws Exception {
+        String sql = "SELECT * FROM coupons WHERE coupon_code = ?";
+        try (
+            Connection con = DBConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, code);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next())
+                return mapResultSetToCoupon(rs);
+        }
+        return null;
+    }
+
+    @Override
+    public Coupon increaseRedemptions(Connection connection, Coupon coupon) throws Exception {
+        String sql = "UPDATE coupons SET redemptions = ? WHERE id = ?";
+
+        try (
+                PreparedStatement ps = connection.prepareStatement(sql)
+        ) {
+            ps.setInt(1, coupon.getRedemptions());
+            ps.setString(2, coupon.getId());
+            ps.executeUpdate();
+        }
+        return coupon;
+    }
+
 }

@@ -1,31 +1,34 @@
 package ltm.ntn.views.products;
 
+import lombok.Getter;
 import ltm.ntn.models.pojo.Product;
 
 import javax.swing.*;
 import java.awt.*;
 
+@Getter
 public class ProductDetailView extends JPanel {
 
     private JTextField txtName, txtDescription, txtPrice, txtQuantity;
     private JLabel lblId, lblSku;
     private JCheckBox chkActive;
-    private Product currentProduct;
-    private ManageProductsView parent;
 
-    public ProductDetailView(ManageProductsView parent) {
-        this.parent = parent;
+    // expose buttons cho controller
+    private JButton btnSave, btnBack, btnDelete;
+
+    private Product currentProduct;
+
+    public ProductDetailView() {
+
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
 
-        // Header
         JLabel header = new JLabel("Product Detail");
         header.setFont(new Font("Segoe UI", Font.BOLD, 28));
         header.setHorizontalAlignment(SwingConstants.CENTER);
         header.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(header, BorderLayout.NORTH);
 
-        // Form
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(Color.WHITE);
         form.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
@@ -53,94 +56,23 @@ public class ProductDetailView extends JPanel {
 
         add(form, BorderLayout.CENTER);
 
-        // Buttons
         JPanel btnPanel = new JPanel();
         btnPanel.setBackground(Color.WHITE);
 
-        JButton btnSave = styledButton("💾 Lưu");
-        JButton btnBack = styledButton("⬅ Quay lại");
-        JButton btnDelete = styledButton("🗑️ Xóa");
-        btnDelete.setBackground(new Color(220, 60, 60)); // màu đỏ
+        btnSave = styledButton("💾 Lưu");
+        btnBack = styledButton("⬅ Quay lại");
+        btnDelete = styledButton("🗑️ Xóa");
+        btnDelete.setBackground(new Color(220, 60, 60));
 
         btnPanel.add(btnDelete);
         btnPanel.add(btnSave);
         btnPanel.add(btnBack);
+
         add(btnPanel, BorderLayout.SOUTH);
-
-        // Action listeners
-        btnSave.addActionListener(e -> saveProduct());
-        btnBack.addActionListener(e -> {
-            if (isModified()) {
-                int opt = JOptionPane.showConfirmDialog(
-                        this, "Bạn có muốn lưu thay đổi?", "Chưa lưu",
-                        JOptionPane.YES_NO_CANCEL_OPTION
-                );
-
-                if (opt == JOptionPane.YES_OPTION) {
-                    saveProduct();
-                    parent.showListPanel();
-                } else if (opt == JOptionPane.NO_OPTION) {
-                    parent.showListPanel();
-                }
-            } else {
-                parent.showListPanel();
-            }
-        });
-        btnDelete.addActionListener(e -> deleteProduct());
     }
 
-    // Nút Xóa
-    private void deleteProduct() {
-        if (currentProduct == null || currentProduct.getId() == null) {
-            JOptionPane.showMessageDialog(this, "Không có sản phẩm để xóa!");
-            return;
-        }
+    // =========================== PUBLIC API ==============================
 
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Bạn có chắc muốn xóa sản phẩm này?",
-                "Xác nhận xóa",
-                JOptionPane.YES_NO_OPTION
-        );
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                boolean deleted = parent.getProductService().deleteProduct(currentProduct.getId());
-                if (deleted) {
-                    JOptionPane.showMessageDialog(this, "Xóa sản phẩm thành công!");
-                    parent.refreshList();
-                    parent.showListPanel();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Không tìm thấy sản phẩm để xóa!");
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi khi xóa sản phẩm: " + ex.getMessage());
-            }
-        }
-    }
-
-    // Nút Lưu
-    private void saveProduct() {
-        if (currentProduct == null) return;
-
-        try {
-            currentProduct.setName(txtName.getText());
-            currentProduct.setDescription(txtDescription.getText());
-            currentProduct.setPrice(Double.parseDouble(txtPrice.getText()));
-            currentProduct.setQuantity(Integer.parseInt(txtQuantity.getText()));
-            currentProduct.setActive(chkActive.isSelected());
-
-            // Lưu vào database thông qua service
-            parent.getProductService().saveProduct(currentProduct);
-
-            JOptionPane.showMessageDialog(this, "Lưu sản phẩm thành công!");
-            parent.refreshList();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Dữ liệu không hợp lệ: " + ex.getMessage());
-        }
-    }
-
-    // Hiển thị thông tin sản phẩm
     public void setProduct(Product p) {
         currentProduct = p;
         lblId.setText(p.getId());
@@ -152,19 +84,16 @@ public class ProductDetailView extends JPanel {
         chkActive.setSelected(p.isActive());
     }
 
-
-    // Kiểm tra có thay đổi so với dữ liệu gốc
-    private boolean isModified() {
-        if (currentProduct == null) return false;
-        if (!currentProduct.getName().equals(txtName.getText())) return true;
-        if (!currentProduct.getDescription().equals(txtDescription.getText())) return true;
-        if (currentProduct.getPrice() != parseDouble(txtPrice.getText())) return true;
-        if (currentProduct.getQuantity() != parseInt(txtQuantity.getText())) return true;
-        if (currentProduct.isActive() != chkActive.isSelected()) return true;
-        return false;
+    public void updateProductFromFields() {
+        currentProduct.setName(txtName.getText());
+        currentProduct.setDescription(txtDescription.getText());
+        currentProduct.setPrice(Double.parseDouble(txtPrice.getText()));
+        currentProduct.setQuantity(Integer.parseInt(txtQuantity.getText()));
+        currentProduct.setActive(chkActive.isSelected());
     }
 
-    // =================== Helper Methods ===================
+    // =========================== UI HELPERS ==============================
+
     private JLabel styledLabel() {
         JLabel lbl = new JLabel();
         lbl.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -193,7 +122,6 @@ public class ProductDetailView extends JPanel {
 
     private void addField(JPanel panel, GridBagConstraints gbc, int row, String label, Component comp) {
         gbc.gridy = row;
-
         gbc.gridx = 0;
         gbc.weightx = 0.2;
         JLabel lbl = new JLabel(label);
@@ -203,13 +131,5 @@ public class ProductDetailView extends JPanel {
         gbc.gridx = 1;
         gbc.weightx = 0.8;
         panel.add(comp, gbc);
-    }
-
-    private double parseDouble(String s) {
-        try { return Double.parseDouble(s); } catch (Exception e) { return -99999; }
-    }
-
-    private int parseInt(String s) {
-        try { return Integer.parseInt(s); } catch (Exception e) { return -99999; }
     }
 }

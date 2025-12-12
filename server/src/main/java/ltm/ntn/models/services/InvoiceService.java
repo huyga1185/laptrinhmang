@@ -4,12 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import ltm.ntn.models.dao.CouponDAO;
 import ltm.ntn.models.dao.InvoiceDAO;
 import ltm.ntn.models.dao.InvoiceItemDAO;
+import ltm.ntn.models.dao.ProductDAO;
 import ltm.ntn.models.pojo.Coupon;
 import ltm.ntn.models.pojo.Invoice;
 import ltm.ntn.models.pojo.InvoiceItem;
 import ltm.ntn.models.pojo.Product;
 import ltm.ntn.models.services.interfaces.IInvoiceService;
 import ltm.ntn.share.DBConnection;
+import ltm.ntn.share.Utils;
 import ltm.ntn.share.dto.requests.creations.InvoiceCreationRequest;
 import ltm.ntn.share.dto.requests.creations.InvoiceItemCreationRequest;
 import ltm.ntn.share.dto.responses.creations.InvoiceCreationResponse;
@@ -21,8 +23,10 @@ import ltm.ntn.share.enums.DiscountType;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
 
 @Slf4j
@@ -30,6 +34,7 @@ public class InvoiceService implements IInvoiceService {
     private final InvoiceDAO invoiceDAO;
     private final InvoiceItemDAO invoiceItemDAO;
     private final CouponDAO couponDAO;
+    private final ProductDAO productDAO;
 
     private final ProductService productService;
     private final InvoiceItemService invoiceItemService;
@@ -39,6 +44,7 @@ public class InvoiceService implements IInvoiceService {
         this.invoiceDAO = new InvoiceDAO();
         this.invoiceItemDAO = new InvoiceItemDAO();
         this.couponDAO = new CouponDAO();
+        this.productDAO = new ProductDAO();
 
         this.productService = new ProductService();
         this.invoiceItemService = new InvoiceItemService();
@@ -76,8 +82,7 @@ public class InvoiceService implements IInvoiceService {
 
         List<InvoiceItem> its = invoiceItemService.findInvoiceItemsByInvoiceId(invoice.getId());
 
-        List<InvoiceItemCreationResponse> itcps  = new ArrayList<>();
-
+        List<InvoiceItemCreationResponse> itcps = new ArrayList<>();
         for (InvoiceItem it : its) {
             Product p = productService.findProductById(it.getProductId());
 
@@ -124,6 +129,7 @@ public class InvoiceService implements IInvoiceService {
 
         return response;
     }
+
 
     private GetInvoiceResponse mapInvoiceToGetInvoiceResponse(Invoice invoice, List<GetInvoiceItemResponse> giips) {
         GetInvoiceResponse gir;
@@ -191,6 +197,44 @@ public class InvoiceService implements IInvoiceService {
     }
 
     @Override
+    public List<GetInvoiceResponse> findAllInvoicesSafe() {
+        List<Invoice> invoices = findAllInvoices(); // lấy tất cả invoices từ DB
+
+        List<GetInvoiceResponse> responses = new ArrayList<>();
+
+        if (invoices == null || invoices.isEmpty()) {
+            // Không ném exception, trả về danh sách rỗng
+            return responses;
+        }
+
+        for (Invoice invoice : invoices) {
+            List<InvoiceItem> items = invoiceItemService.findInvoiceItemsByInvoiceId(invoice.getId());
+            List<GetInvoiceItemResponse> itemResponses = new ArrayList<>();
+
+            if (items != null && !items.isEmpty()) {
+                for (InvoiceItem item : items) {
+                    Product p = productService.findProductById(item.getProductId());
+
+                    GetInvoiceItemResponse itemResponse = GetInvoiceItemResponse.builder()
+                            .productName(p != null ? p.getName() : "Unknown")
+                            .quantity(item.getQuantity())
+                            .unitPrice(item.getUnitPrice())
+                            .totalPrice(item.getTotalPrice())
+                            .build();
+
+                    itemResponses.add(itemResponse);
+                }
+            }
+
+            GetInvoiceResponse invoiceResponse = mapInvoiceToGetInvoiceResponse(invoice, itemResponses);
+            responses.add(invoiceResponse);
+        }
+
+        return responses;
+    }
+
+
+    @Override
     public List<GetInvoiceResponse> findAllInvoiceForClients() {
         List<Invoice> invoices = findAllInvoices();
 
@@ -248,80 +292,83 @@ public class InvoiceService implements IInvoiceService {
 
     @Override
     public Invoice createInvoice(Invoice invoice, List<InvoiceItem> items) {
-        if (invoice == null)
-            throw new NullPointerException("Invoice must not be null.");
-        if (items.isEmpty())
-            throw new IllegalArgumentException("Invoice items must not be empty.");
+        if (invoice == null) throw new NullPointerException("Invoice must not be null.");
+        if (items == null || items.isEmpty()) throw new IllegalArgumentException("Invoice items must not be empty.");
 
         Connection connection = null;
-
         try {
             connection = DBConnection.getConnection();
             connection.setAutoCommit(false);
 
+            if (invoice.getId() != null)
+                throw new RuntimeException("Invoice ID must be null for new invoice");
+
+            Coupon c = null;
+            if (invoice.getCouponId() != null) {
+                c = couponService.findCouponByID(invoice.getCouponId());
+                if (c == null) throw new RuntimeException("Coupon with ID " + invoice.getCouponId() + " not found.");
+                // Kiểm tra coupon hợp lệ
+                if (c.getIssueDate().isAfter(LocalDate.now()))
+                    throw new RuntimeException("Coupon not active yet");
+                if (c.getExpiryDate().isBefore(LocalDate.now()))
+                    throw new RuntimeException("Coupon expired");
+                if (c.getRedemptions() >= c.getMaxRedemptions())
+                    throw new RuntimeException("Coupon redemptions exceeded");
+            }
+
+            // Insert invoice
+            Invoice savedInvoice = invoiceDAO.save(connection, invoice);
+            log.debug("Inserted invoice with ID = {}", savedInvoice.getId());
+
             double totalPrice = 0.0;
-            Coupon coupon = null;
-
-            invoice = invoiceDAO.save(connection, invoice);
-
             for (InvoiceItem item : items) {
                 Product product = productService.findProductById(item.getProductId());
+                if (product == null) throw new RuntimeException("Product not found: " + item.getProductId());
+                if (!product.isActive()) throw new RuntimeException("Product not active: " + product.getName());
+                if (item.getQuantity() > product.getQuantity()) throw new RuntimeException("Quantity exceeds: " + product.getName());
 
-                if (product == null)
-                    throw new RuntimeException("Could not find product id.");
-                if (!product.isActive())
-                    throw new RuntimeException("Product is not available.");
-                if (item.getQuantity() > product.getQuantity())
-                    throw new RuntimeException("Product quantity is greater than item quantity.");
-
+                item.setInvoiceId(savedInvoice.getId());
+                item.setUnitPrice(product.getPrice());
                 item.setTotalPrice(item.getUnitPrice() * item.getQuantity());
+
                 invoiceItemDAO.save(connection, item);
+
+                product.setQuantity(product.getQuantity() - item.getQuantity());
+                product.setSold(product.getSold() + item.getQuantity());
+                productDAO.save(connection, product);
+
                 totalPrice += item.getTotalPrice();
             }
 
-            if (invoice.getCouponId() != null) {
-                coupon = couponService.findCouponByID(invoice.getCouponId());
-
-                if (
-                    !LocalDate.now().isBefore(coupon.getIssueDate()) &&
-                    LocalDate.now().isBefore(coupon.getExpiryDate()) &&
-                    (
-                        coupon.getRedemptions() <
-                        coupon.getMaxRedemptions()
-                    ) &&
-                    totalPrice >= coupon.getMinimumPurchaseAmount()
-                ) {
-                    if (coupon.getDiscountType() == DiscountType.PERCENTAGE)
-                        totalPrice = totalPrice - (totalPrice * (coupon.getDiscountAmount() / 100.0));
-                    else if (coupon.getDiscountType() == DiscountType.FIXED_AMOUNT)
-                        totalPrice = totalPrice - coupon.getDiscountAmount();
-
-                    coupon.setRedemptions(coupon.getRedemptions() + 1);
-                    couponDAO.save(connection, coupon);
+            // Áp dụng coupon nếu có
+            if (c != null) {
+                if (c.getDiscountType().equals(DiscountType.PERCENTAGE)) {
+                    totalPrice = totalPrice - (totalPrice * (c.getDiscountAmount() / 100.0));
+                } else if (c.getDiscountType().equals(DiscountType.FIXED_AMOUNT)) {
+                    totalPrice = totalPrice - c.getDiscountAmount();
+                    if (totalPrice < 0) totalPrice = 0;
                 }
+
+                // Tăng redemptions luôn
+                c.setRedemptions(c.getRedemptions() + 1);
+                couponDAO.increaseRedemptions(connection, c);
             }
 
-            invoice.setTotalAmount(totalPrice);
-            invoiceDAO.save(connection, invoice);
+            savedInvoice.setTotalAmount(totalPrice);
+            invoiceDAO.save(connection, savedInvoice);
 
             connection.commit();
+
+            return findInvoiceById(savedInvoice.getId());
         } catch (Exception e) {
-            try {
-                if (connection != null) connection.rollback();
-            } catch (SQLException ex) {
-                log.error("Error rolling back transaction: ", ex);
-            }
-            log.error("Error creating invoice: ", e);
-            throw new RuntimeException("Could not create invoice.");
+            try { if (connection != null) connection.rollback(); } catch (SQLException ex) {}
+            throw new RuntimeException("Could not create invoice.", e);
         } finally {
-            try {
-                if (connection != null) connection.close();
-            } catch (SQLException e) {
-                log.error("Error closing connection: ", e);
-            }
+            try { if (connection != null) connection.close(); } catch (SQLException ignore) {}
         }
-        return invoice;
     }
+
+
 
     @Override
     public Invoice findInvoiceById(String id) {
@@ -351,5 +398,27 @@ public class InvoiceService implements IInvoiceService {
             log.error("Error finding invoices: ", e);
             return new ArrayList<>();
         }
+    }
+
+    public Hashtable<String, Double> getRevenueByMonth(int year) {
+        List<Invoice> invoices = findAllInvoices();
+        Hashtable<String, Double> revenueByMonth = new Hashtable<>();
+
+        // Khởi tạo tất cả tháng = 0
+        for (int m = 1; m <= 12; m++) {
+            revenueByMonth.put(String.format("%02d", m), 0.0);
+        }
+
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MM");
+
+        for (Invoice invoice : invoices) {
+            if (invoice.getCreatedAt() != null && invoice.getCreatedAt().getYear() == year) {
+                String month = invoice.getCreatedAt().format(monthFormatter);
+                double current = revenueByMonth.getOrDefault(month, 0.0);
+                revenueByMonth.put(month, current + invoice.getTotalAmount());
+            }
+        }
+
+        return revenueByMonth;
     }
 }

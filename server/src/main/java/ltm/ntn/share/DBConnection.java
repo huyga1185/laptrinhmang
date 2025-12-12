@@ -15,7 +15,7 @@ public class DBConnection {
     private static final String PASSWORD;
 
     static {
-        try(InputStream input = DBConnection.class.getClassLoader().getResourceAsStream("applications.properties")) {
+        try(InputStream input = DBConnection.class.getClassLoader().getResourceAsStream("application.properties")) {
             Properties prop = new Properties();
             prop.load(input);
 

@@ -15,7 +15,7 @@ import java.util.List;
 public class InvoiceItemDAO implements IInvoiceItemDAO {
     @Override
     public InvoiceItem save(Connection connection, InvoiceItem invoiceItem) throws Exception {
-        String sql = "INSERT INTO invoice_items(id, invoice_id, product_id, quantity, unit_pice, total_price) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO invoice_items(id, invoice_id, product_id, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?)";
         try (
             PreparedStatement preparedStatement = connection.prepareStatement(sql)
         ) {
@@ -39,7 +39,7 @@ public class InvoiceItemDAO implements IInvoiceItemDAO {
         invoiceItem.setInvoiceId(rs.getString("invoice_id"));
         invoiceItem.setProductId(rs.getString("product_id"));
         invoiceItem.setQuantity(rs.getInt("quantity"));
-        invoiceItem.setUnitPrice(rs.getDouble("unit_pice"));
+        invoiceItem.setUnitPrice(rs.getDouble("unit_price"));
         invoiceItem.setTotalPrice(rs.getDouble("total_price"));
         return invoiceItem;
     }
@@ -97,4 +97,22 @@ public class InvoiceItemDAO implements IInvoiceItemDAO {
         }
         return null;
     }
+
+    @Override
+    public boolean isProductUsed(String productId) throws Exception {
+        String sql = "SELECT EXISTS(SELECT 1 FROM invoice_items WHERE product_id = ?)";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    return rs.getBoolean(1);
+            }
+        }
+        return false;
+    }
+
 }

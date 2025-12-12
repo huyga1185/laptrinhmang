@@ -47,7 +47,7 @@ CREATE TABLE invoice_items (
   product_id CHAR(36) NOT NULL,
   quantity SMALLINT UNSIGNED NOT NULL DEFAULT 1,
   unit_price DECIMAL(10, 2) NOT NULL,
-  total_price DECIMAL(10, 2) AS (quantity * unit_price) STORED,
+  total_price DECIMAL(10, 2) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_invoice_id FOREIGN KEY(invoice_id) REFERENCES invoices(id),
