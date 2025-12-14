@@ -52,8 +52,8 @@ public class ProductAddView extends JPanel {
 
         add(form, BorderLayout.CENTER);
 
-        btnAdd = styledButton("➕ Thêm");
-        btnBack = styledButton("⬅ Quay lại");
+        btnAdd = styledButton("Add product");
+        btnBack = styledButton("⬅ Back");
 
         JPanel btnPanel = new JPanel();
         btnPanel.setBackground(Color.WHITE);

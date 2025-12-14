@@ -59,9 +59,9 @@ public class ProductDetailView extends JPanel {
         JPanel btnPanel = new JPanel();
         btnPanel.setBackground(Color.WHITE);
 
-        btnSave = styledButton("💾 Lưu");
-        btnBack = styledButton("⬅ Quay lại");
-        btnDelete = styledButton("🗑️ Xóa");
+        btnSave = styledButton("💾Save");
+        btnBack = styledButton("⬅ Back");
+        btnDelete = styledButton("🗑️Delete");
         btnDelete.setBackground(new Color(220, 60, 60));
 
         btnPanel.add(btnDelete);
